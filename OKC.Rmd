@@ -1,0 +1,143 @@
+---
+title: "OKCTHUNDER"
+author: "Jim Rouse"
+date: '2022-08-29'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(tidyverse) 
+library(ggplot2)
+```
+
+```{r}
+library(readr)
+shots_data <- read_csv("C:/Users/Jim/Downloads/shots_data.csv")
+View(shots_data)
+```
+
+```{r}
+
+# need to manipulate the data so as to distinguish between corner 3's, long 3's, and two point shots 
+# 1 will represent true for these mutations and 0 will represent false. 
+# Assume strict inequality for shots to be 3 pointers. 
+
+shots_data <- shots_data %>% 
+  mutate(nc3 = if_else((sqrt(x^2 + y^2) > 23.75) & (y > 7.8), 1,0)) 
+
+shots_data <- shots_data %>% 
+  mutate(c3 = if_else((y <= 7.8 & x > 22),1,0))
+
+shots_data <- shots_data %>% 
+  mutate(two_pointer = if_else((!nc3) & (!c3),1,0))
+
+shots_data <- shots_data %>% 
+  mutate(three_pointer = if_else((!two_pointer),1,0))
+
+shots_data
+
+```
+
+
+```{r}
+# calculate shot distribution numbers
+
+total_shots_A <- length(which(shots_data$team == 'Team A'))
+
+total_shots_B <- length(which(shots_data$team == 'Team B'))
+
+percentage_twos_A <- length(which(shots_data$team == 'Team A' & 
+                             shots_data$two_pointer)) /
+  total_shots_A
+
+percentage_twos_A
+
+percentage_3pc_A <- length(which(shots_data$team == 'Team A' & 
+                              shots_data$c3)) / 
+  total_shots_A
+
+percentage_3pc_A
+
+percentage_3pnc_A <- length(which(shots_data$team == 'Team A' & 
+                              shots_data$nc3)) / 
+  total_shots_A
+
+percentage_3pnc_A
+
+percentage_twos_B <- length(which(shots_data$team == 'Team B' & 
+                             shots_data$two_pointer)) /
+  total_shots_B
+
+percentage_twos_B
+
+percentage_3pc_B <- length(which(shots_data$team == 'Team B' & 
+                              shots_data$c3)) / 
+  total_shots_B
+
+percentage_3pc_B
+
+percentage_3pnc_B <- length(which(shots_data$team == 'Team B' & 
+                              shots_data$nc3)) / 
+  total_shots_B
+
+percentage_3pnc_B
+
+# Visuals for Shot Distribution 
+dist_A <- c(percentage_twos_A, percentage_3pc_A, percentage_3pnc_A) 
+lbls_A <- c("Two-pointers", "Corner 3-pointers", "Non-corner 3-pointers") 
+pie(dist_A, labels = lbls_A, main = "Distribution of Shots for Team A")
+
+dist_B <- c(percentage_twos_B, percentage_3pc_B, percentage_3pnc_B) 
+pie(dist_B, labels = lbls_A, main = "Distribution of Shots for Team B")
+
+```
+
+```{r}
+# efficiencies within zones calculation 
+
+EFG_2_A <- (length(which(shots_data$team == 'Team A' & shots_data$two_pointer & shots_data$fgmade))) / 
+  length(which(shots_data$team == 'Team A' & shots_data$two_pointer)) 
+
+EFG_2_A
+
+EFG_3C_A <- (length(which(shots_data$team == 'Team A' & shots_data$c3 & shots_data$fgmade)) + 
+  (.5 * (length(which(shots_data$team == 'Team A' & shots_data$c3 & shots_data$fgmade))))) / 
+  (length(which(shots_data$team == 'Team A' & shots_data$c3))) 
+
+EFG_3C_A 
+
+EFG_3NC_A <- (1.5 * (length(which(shots_data$team == 'Team A' & shots_data$nc3 & shots_data$fgmade)))) / 
+  (length(which(shots_data$team == 'Team A' & shots_data$nc3)))
+
+EFG_3NC_A
+```
+
+```{r}
+# efficiencies within zones calculation 
+
+EFG_2_B <- (length(which(shots_data$team == 'Team B' & shots_data$two_pointer & shots_data$fgmade))) / 
+  length(which(shots_data$team == 'Team B' & shots_data$two_pointer)) 
+
+EFG_2_B
+
+EFG_3C_B <- (length(which(shots_data$team == 'Team B' & shots_data$c3 & shots_data$fgmade)) + 
+  (.5 * (length(which(shots_data$team == 'Team B' & shots_data$c3 & shots_data$fgmade))))) / 
+  (length(which(shots_data$team == 'Team B' & shots_data$c3))) 
+
+EFG_3C_B 
+
+EFG_3NC_B <- (1.5 * (length(which(shots_data$team == 'Team B' & shots_data$nc3 & shots_data$fgmade)))) / 
+  (length(which(shots_data$team == 'Team B' & shots_data$nc3)))
+
+EFG_3NC_B
+```
+
+
+
+
